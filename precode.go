@@ -71,8 +71,13 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	// 4. Собираем числа из каналов outs
-	// ...
+	// 4. Собираем числа из каналов outs ???
+	for ch := range outs {
+	    wg.Add(1)
+        go func(in <-chan int64, i int64){ amounts[i]++ }
+        wg.Done()
+	}
+    wg.WaitGroup()
 
 	go func() {
 		// ждём завершения работы всех горутин для outs
