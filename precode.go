@@ -72,6 +72,7 @@ func main() {
 	chOut := make(chan int64, NumOut)
 
 	var wg sync.WaitGroup
+    var v int64
 
 	// 4. Собираем числа из каналов outs
 	for j, ch := range outs {
@@ -80,6 +81,8 @@ func main() {
         go func(in <-chan int64, i int64){
             defer wg.Done()
             amounts[i]++
+            v = <- in
+            chOut <- v
         }(ch, idx)
 	}
 
