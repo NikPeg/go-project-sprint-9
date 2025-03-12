@@ -33,9 +33,10 @@ func Worker(in <-chan int64, out chan<- int64) {
 	defer close(out)
 	for i := 0;; i++ {
         v, ok := <-in
+        out <- v
         if !ok {
-            out <- v
             time.Sleep(time.Millisecond)
+            return
         }
     }
 }
@@ -74,7 +75,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	// 4. Собираем числа из каналов outs
-	for i, ch := range outs {
+    for i, ch := range outs {
         wg.Add(1)
         go func(in <-chan int64, i int64) {
             defer wg.Done()
@@ -85,12 +86,12 @@ func main() {
         }(ch, int64(i))
     }
 
-	go func() {
-		// ждём завершения работы всех горутин для outs
-		wg.Wait()
-		// закрываем результирующий канал
-		close(chOut)
-	}()
+    go func() {
+        // ждём завершения работы всех горутин для outs
+        wg.Wait()
+        // закрываем результирующий канал
+        close(chOut)
+    }()
 
 	var count int64 // количество чисел результирующего канала
 	var sum int64   // сумма чисел результирующего канала
