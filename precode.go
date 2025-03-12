@@ -16,15 +16,15 @@ func Generator(ctx context.Context, ch chan<- int64, fn func(int64)) {
 	// 1. Функция Generator
 	defer close(ch)
 	var i int64
-	for ;;i++ {
-        select {
-        case <-ctx.Done():
-            return
-        default:
-            ch <- i
-            fn(i)
-        }
-    }
+	for ; ; i++ {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			ch <- i
+			fn(i)
+		}
+	}
 }
 
 // Worker читает число из канала in и пишет его в канал out.
@@ -32,13 +32,13 @@ func Worker(in <-chan int64, out chan<- int64) {
 	// 2. Функция Worker
 	defer close(out)
 	for {
-        v, ok := <-in
-        if !ok {
-            return
-        }
-        out <- v
-        time.Sleep(time.Millisecond)
-    }
+		v, ok := <-in
+		if !ok {
+			return
+		}
+		out <- v
+		time.Sleep(time.Millisecond)
+	}
 }
 
 func main() {
@@ -75,31 +75,31 @@ func main() {
 	var wg sync.WaitGroup
 
 	// 4. Собираем числа из каналов outs
-    for i, ch := range outs {
-        wg.Add(1)
-        go func(in <-chan int64, i int64) {
-            defer wg.Done()
-            for v := range in {
-                amounts[i]++
-                chOut <- v
-            }
-        }(ch, int64(i))
-    }
+	for i, ch := range outs {
+		wg.Add(1)
+		go func(in <-chan int64, i int64) {
+			defer wg.Done()
+			for v := range in {
+				amounts[i]++
+				chOut <- v
+			}
+		}(ch, int64(i))
+	}
 
-    go func() {
-        // ждём завершения работы всех горутин для outs
-        wg.Wait()
-        // закрываем результирующий канал
-        close(chOut)
-    }()
+	go func() {
+		// ждём завершения работы всех горутин для outs
+		wg.Wait()
+		// закрываем результирующий канал
+		close(chOut)
+	}()
 
 	var count int64 // количество чисел результирующего канала
 	var sum int64   // сумма чисел результирующего канала
 
 	// 5. Читаем числа из результирующего канала
 	for o := range chOut {
-	    count ++
-	    sum += o
+		count++
+		sum += o
 	}
 
 	fmt.Println("Количество чисел", inputCount, count)
